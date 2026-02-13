@@ -15,19 +15,46 @@ This project was developed as part of the Advanced Python module (M1).
 
 ---
 
+## General Pipeline Overview (Project Architecture)
+
+```
+Images
+   ↓
+Feature Extraction (Pixels or HOG)
+   ↓
+StandardScaler
+   ↓
+Classifier (LogReg / SVM)
+   ↓
+Cross-Validation / Evaluation
+   ↓
+Results (Accuracy, CSV reports, Confusion Matrix)
+```
+
+The project is structured to clearly separate:
+
+- Data handling  
+- Feature extraction  
+- Model definition  
+- Experimental evaluation  
+
+---
+
 ## 2. Datasets
 
 ### 2.1 Digits (scikit-learn)
 
-- 8×8 grayscale images
-- 1797 samples
-- Small resolution dataset
+- 8×8 grayscale images  
+- 1797 samples  
+- Small resolution dataset  
+- Suitable for fast experimentation  
 
 ### 2.2 MNIST (OpenML)
 
-- 28×28 grayscale images
-- Larger and more realistic dataset
-- Standard benchmark for digit recognition
+- 28×28 grayscale images  
+- Larger and more realistic dataset  
+- Standard benchmark for digit recognition  
+- Sub-sampling is used to keep computation time reasonable  
 
 ---
 
@@ -37,19 +64,20 @@ For each dataset, we compare:
 
 ### Feature Representations
 
-- Raw pixel values
-- HOG (Histogram of Oriented Gradients)
+- Raw pixel values  
+- HOG (Histogram of Oriented Gradients)  
 
 ### Classifiers
 
-- Logistic Regression
-- Linear Support Vector Machine (SVM)
+- Logistic Regression  
+- Linear Support Vector Machine (SVM)  
 
 ### Evaluation Strategy
 
-- Stratified K-Fold Cross-Validation
-- Mean accuracy and standard deviation reported
-- Hyperparameter tuning via GridSearchCV (when applicable)
+- Stratified K-Fold Cross-Validation  
+- Mean accuracy and standard deviation reported  
+- Hyperparameter tuning via GridSearchCV (when applicable)  
+- Results exported as CSV and JSON files  
 
 ---
 
@@ -57,18 +85,18 @@ For each dataset, we compare:
 
 Configurations tested:
 
-- Pixels + Logistic Regression
-- Pixels + SVM
-- HOG (8×8) + Logistic Regression
-- HOG (8×8) + SVM
-- HOG (after resizing to 32×32) + Logistic Regression
-- HOG (after resizing to 32×32) + SVM
+- Pixels + Logistic Regression  
+- Pixels + SVM  
+- HOG (8×8) + Logistic Regression  
+- HOG (8×8) + SVM  
+- HOG (after resizing to 32×32) + Logistic Regression  
+- HOG (after resizing to 32×32) + SVM  
 
 ### Main Observations
 
-- HOG on very small images (8×8) degrades performance.
-- After resizing to 32×32, HOG + SVM achieves the best results (accuracy).
-- HOG requires sufficient resolution to extract meaningful gradients.
+- HOG on very small images (8×8) degrades performance.  
+- After resizing to 32×32, HOG + SVM achieves the best results.  
+- HOG requires sufficient resolution to extract meaningful gradients.  
 
 ---
 
@@ -76,33 +104,71 @@ Configurations tested:
 
 Configurations tested:
 
-- Pixels + Logistic Regression
-- Pixels + SVM
-- HOG + Logistic Regression
-- HOG + SVM
+- Pixels + Logistic Regression  
+- Pixels + Linear SVM  
+- HOG + Logistic Regression  
+- HOG + Linear SVM  
 
 ### Main Observations
 
-- HOG improves performance compared to raw pixels.
-- Higher resolution allows better gradient-based feature extraction.
-- Representation choice is as important as classifier choice.
+- HOG improves performance compared to raw pixels.  
+- Higher resolution allows better gradient-based feature extraction.  
+- Representation choice is as important as classifier choice.  
 
 ---
 
 ## 6. Installation
 
-Clone the repository:
+### Clone the repository
 
 ```bash
 git clone https://github.com/Mouad1011/projet-python-avance.git
-cd projet_python_avance
+cd projet-python-avance
 ```
+
 ---
-###  Install dependencies:
+
+### Create a virtual environment (Recommended)
+
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+**Windows:**
+```bash
+venv\Scripts\activate
+```
+
+**Linux / Mac:**
+```bash
+source venv/bin/activate
+```
+
+---
+
+### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
+
+---
+
+### Minimal Installation Test
+
+Run:
+
+```bash
+python -m src.digit_classifier.cli train
+```
+
+If a model file is created in the `/models` directory without errors, the installation was successful.
+
+Tested on:
+- Windows 11  
+- Python 3.13  
 
 ---
 
@@ -114,6 +180,12 @@ pip install -r requirements.txt
 python -m src.digit_classifier.experiments.digits_study
 ```
 
+Results are saved in `/reports`:
+- CSV file with all configurations  
+- JSON file with best configuration  
+
+---
+
 ### MNIST Study (cross-validation + comparison)
 
 ```bash
@@ -124,7 +196,7 @@ python -m src.digit_classifier.experiments.mnist_study
 
 ## 8. Usage (Command Line Interface)
 
-> The CLI provides simple baseline training/evaluation and a quick demo prediction.
+The CLI provides simple baseline training/evaluation and a quick demo prediction.
 
 ### Train a baseline model
 
@@ -138,18 +210,49 @@ python -m src.digit_classifier.cli train
 python -m src.digit_classifier.cli evaluate
 ```
 
+This generates a confusion matrix saved in `/reports`.
+
 ### Predict a digit by index (demo)
 
 ```bash
 python -m src.digit_classifier.cli predict --index 42
 ```
 
+This displays:
+- The image  
+- The predicted label  
+- The true label  
+
 ---
 
-## 9. Project Structure
+## 9. Visualization
+
+The project generates:
+
+- Confusion matrices (classification error analysis)  
+- Cross-validation result tables (CSV)  
+- Best configuration summary (JSON)  
+
+Example output (Digits study):
 
 ```
-projet_python_avance/
+representation   model   best_cv_accuracy
+hog32            svm     0.99
+pixels           logreg  0.97
+```
+
+These visualizations help analyze:
+
+- Model performance  
+- Impact of resolution  
+- Effectiveness of HOG  
+
+---
+
+## 10. Project Structure
+
+```
+projet-python-avance/
 │
 ├── src/
 │   └── digit_classifier/
@@ -171,17 +274,17 @@ projet_python_avance/
 
 ---
 
-## 10. Key Conclusions
+## 11. Key Conclusions
 
-- HOG effectiveness depends strongly on image resolution.
-- On very small images (Digits 8×8), HOG can underperform unless images are resized.
-- On higher resolution data (MNIST 28×28), HOG significantly improves performance.
-- Cross-validation is essential for robust experimental comparison.
+- HOG effectiveness depends strongly on image resolution.  
+- On very small images (Digits 8×8), HOG can underperform unless images are resized.  
+- On higher resolution data (MNIST 28×28), HOG significantly improves performance.  
+- Cross-validation is essential for robust experimental comparison.  
+- Model performance depends jointly on representation and classifier choice.  
 
 ---
 
-## 11. Author
+## 12. Author
 
 IDBELKHEIR Mouad – Advanced Python Project  
 Project title: **Digit Detection using AI**
-
