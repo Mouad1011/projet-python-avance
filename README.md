@@ -94,7 +94,7 @@ Configurations tested:
 Clone the repository:
 
 ```bash
-git clone <your_repository_url>
+git clone https://github.com/Mouad1011/projet-python-avance.git
 cd projet_python_avance
 ```
 ---
