@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from src.digit_classifier.data import DigitsDataset
-from src.digit_classifier.model import DigitClassifier
+from src.digit_classifier.model import build_model, save_model
 
 
 def train_and_save(
@@ -26,15 +26,15 @@ def train_and_save(
     X_train, X_test, y_train, y_test = dataset.get_train_test_split()
 
     # Modèle
-    classifier = DigitClassifier(model_type=model_type)
-    classifier.fit(X_train, y_train)
+    model = build_model(model_type=model_type)
+    model.fit(X_train, y_train)
 
     # Sauvegarde
     Path(model_path).parent.mkdir(parents=True, exist_ok=True)
-    classifier.save_model(model_path)
+    save_model(model, model_path)
 
     # Score
-    accuracy = classifier.score(X_test, y_test)
+    accuracy = model.score(X_test, y_test)
     return accuracy, model_path
 
 

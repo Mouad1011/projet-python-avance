@@ -1,5 +1,5 @@
 from src.digit_classifier.data import DigitsDataset
-from src.digit_classifier.model import DigitClassifier
+from src.digit_classifier.model import load_model
 from src.digit_classifier.viz import save_confusion_matrix
 
 
@@ -24,15 +24,18 @@ def evaluate_model(
     if output_path is None:
         output_path = f"reports/confusion_matrix_{features_type}_{model_type}.png"
 
+    # Données (même representation que celle utilisée à l'entraînement)
     dataset = DigitsDataset(features_type=features_type)
     _, X_test, _, y_test = dataset.get_train_test_split()
 
-    classifier = DigitClassifier(model_type=model_type)
-    classifier.load_model(model_path)
+    # Chargement du modèle
+    model = load_model(model_path)
 
-    y_pred = classifier.predict(X_test)
-    accuracy = classifier.score(X_test, y_test)
+    # Prédiction + score
+    y_pred = model.predict(X_test)
+    accuracy = model.score(X_test, y_test)
 
+    # Matrice de confusion
     img_path = save_confusion_matrix(y_test, y_pred, output_path=output_path)
     return accuracy, img_path
 
