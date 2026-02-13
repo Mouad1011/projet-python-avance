@@ -6,54 +6,59 @@ from src.digit_classifier.predict import predict_by_index
 
 
 def main():
-    """
-    Interface en ligne de commande pour entraîner, évaluer
-    et tester le classifieur de chiffres manuscrits.
-    """
     parser = argparse.ArgumentParser(
-        description="CLI pour la classification de chiffres manuscrits"
+        description="CLI pour la classification de chiffres manuscrits (baseline + version avancée)"
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # ----- Entraînement -----
-    subparsers.add_parser(
-        "train",
-        help="Entraîner le modèle et le sauvegarder"
-    )
+    # ----- options communes train/evaluate -----
+    def add_common_args(p):
+        p.add_argument(
+            "--features",
+            choices=["pixels", "hog"],
+            default="pixels",
+            help="Type de représentation : pixels (baseline) ou hog (avancé)"
+        )
+        p.add_argument(
+            "--model",
+            choices=["logreg", "svm"],
+            default="logreg",
+            help="Type de modèle : logreg (baseline) ou svm (avancé)"
+        )
 
-    # ----- Évaluation -----
-    subparsers.add_parser(
-        "evaluate",
-        help="Évaluer le modèle entraîné"
-    )
+    # ----- train -----
+    train_parser = subparsers.add_parser("train", help="Entraîner le modèle et le sauvegarder")
+    add_common_args(train_parser)
 
-    # ----- Prédiction -----
-    predict_parser = subparsers.add_parser(
-        "predict",
-        help="Prédire un chiffre à partir de son index"
-    )
+    # ----- evaluate -----
+    eval_parser = subparsers.add_parser("evaluate", help="Évaluer le modèle entraîné")
+    add_common_args(eval_parser)
+
+    # ----- predict -----
+    predict_parser = subparsers.add_parser("predict", help="Prédire un chiffre à partir de son index")
+    predict_parser.add_argument("--index", type=int, required=True, help="Index de l'image à prédire")
     predict_parser.add_argument(
-        "--index",
-        type=int,
-        required=True,
-        help="Index de l'image à prédire dans le dataset"
+        "--model-path",
+        default="models/digit_model_pixels_logreg.joblib",
+        help="Chemin vers le modèle à charger (par défaut : baseline)"
     )
 
     args = parser.parse_args()
 
     if args.command == "train":
-        accuracy = train_and_save()
-        print(f"Entraînement terminé. Accuracy : {accuracy:.3f}")
+        acc, path = train_and_save(features_type=args.features, model_type=args.model)
+        print(f"Entraînement terminé. Accuracy : {acc:.3f}")
+        print(f"Modèle sauvegardé dans : {path}")
 
     elif args.command == "evaluate":
-        accuracy, img_path = evaluate_model()
-        print(f"Évaluation terminée. Accuracy : {accuracy:.3f}")
-        print(f"Matrice de confusion sauvegardée dans : {img_path}")
+        acc, img = evaluate_model(features_type=args.features, model_type=args.model)
+        print(f"Évaluation terminée. Accuracy : {acc:.3f}")
+        print(f"Matrice de confusion sauvegardée dans : {img}")
 
     elif args.command == "predict":
-        prediction, true_label = predict_by_index(args.index)
-        print(f"Prédiction : {prediction} | Label réel : {true_label}")
+        pred, true = predict_by_index(args.index, model_path=args.model_path)
+        print(f"Prédiction : {pred} | Label réel : {true}")
 
 
 if __name__ == "__main__":

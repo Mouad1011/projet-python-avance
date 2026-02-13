@@ -1,3 +1,6 @@
+
+reports/*.csv
+reports/*.json
 # Python cache
 __pycache__/
 *.pyc

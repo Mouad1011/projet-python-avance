@@ -1,40 +1,47 @@
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 
+from src.digit_classifier.features import extract_hog_features
+
 
 class DigitsDataset:
     """
-    Classe utilitaire pour charger le dataset des chiffres manuscrits
-    et le découper en ensembles d'entraînement et de test.
+    Charge le dataset des chiffres manuscrits et prépare les données
+    soit en pixels bruts (baseline), soit en descripteurs HOG (avancé).
     """
 
-    def __init__(self, test_size=0.2, random_state=42):
+    def __init__(self, test_size=0.2, random_state=42, features_type="pixels"):
         """
         Paramètres :
-        - test_size : proportion des données utilisée pour le test
-        - random_state : graine aléatoire pour garantir la reproductibilité
+        - test_size : proportion du dataset utilisée pour le test
+        - random_state : graine aléatoire pour reproductibilité
+        - features_type : "pixels" ou "hog"
         """
         self.test_size = test_size
         self.random_state = random_state
+        self.features_type = features_type
+
         self.data = None
         self.labels = None
 
     def load_data(self):
-        """
-        Charge le dataset load_digits de scikit-learn.
-        Les images (8x8) sont automatiquement aplaties en vecteurs de pixels.
-        """
         digits = load_digits()
+        self.labels = digits.target
 
-        self.data = digits.data      # vecteurs de pixels (64 valeurs)
-        self.labels = digits.target  # labels réels (0 à 9)
+        # Baseline : pixels (64 valeurs)
+        if self.features_type == "pixels":
+            self.data = digits.data
+
+        # Avancé : HOG calculé depuis les images 8x8
+        elif self.features_type == "hog":
+            self.data = extract_hog_features(digits.images)
+
+        else:
+            raise ValueError('features_type doit être "pixels" ou "hog"')
 
         return self.data, self.labels
 
     def get_train_test_split(self):
-        """
-        Sépare les données en ensembles d'entraînement et de test.
-        """
         if self.data is None or self.labels is None:
             self.load_data()
 

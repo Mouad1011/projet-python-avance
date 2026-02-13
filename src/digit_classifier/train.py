@@ -4,31 +4,40 @@ from src.digit_classifier.data import DigitsDataset
 from src.digit_classifier.model import DigitClassifier
 
 
-def train_and_save(model_path="models/digit_model.joblib"):
+def train_and_save(
+    features_type="pixels",
+    model_type="logreg",
+    model_path=None
+):
     """
-    Entraîne le modèle de classification sur le dataset des chiffres
-    et sauvegarde le modèle entraîné sur le disque.
+    Entraîne un modèle sur le dataset digits et sauvegarde le modèle entraîné.
+
+    Paramètres :
+    - features_type : "pixels" ou "hog"
+    - model_type : "logreg" ou "svm"
+    - model_path : chemin de sauvegarde (optionnel). Si None, on génère un nom automatique.
     """
-    # Chargement des données
-    dataset = DigitsDataset()
+    # Nom automatique pour éviter d’écraser les modèles
+    if model_path is None:
+        model_path = f"models/digit_model_{features_type}_{model_type}.joblib"
+
+    # Données
+    dataset = DigitsDataset(features_type=features_type)
     X_train, X_test, y_train, y_test = dataset.get_train_test_split()
 
-    # Initialisation et entraînement du modèle
-    classifier = DigitClassifier()
+    # Modèle
+    classifier = DigitClassifier(model_type=model_type)
     classifier.fit(X_train, y_train)
 
-    # Création du dossier de sauvegarde si nécessaire
-    model_dir = Path(model_path).parent
-    model_dir.mkdir(parents=True, exist_ok=True)
-
-    # Sauvegarde du modèle
+    # Sauvegarde
+    Path(model_path).parent.mkdir(parents=True, exist_ok=True)
     classifier.save_model(model_path)
 
-    # Évaluation rapide sur le jeu de test
+    # Score
     accuracy = classifier.score(X_test, y_test)
-    return accuracy
+    return accuracy, model_path
 
 
 if __name__ == "__main__":
-    acc = train_and_save()
-    print(f"Modèle entraîné et sauvegardé avec une accuracy de {acc:.3f}")
+    acc, path = train_and_save()
+    print(f"Modèle entraîné et sauvegardé dans {path} (accuracy={acc:.3f})")
