@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.datasets import load_digits
 
 from src.digit_classifier.features import extract_features
@@ -10,37 +10,47 @@ def predict_by_index(
     index,
     features_type="pixels",
     model_type="logreg",
-    model_path=None
+    model_path=None,
+    hog_target_size=None
 ):
     """
-    Prédit le chiffre correspondant à une image du dataset digits
-    à partir de son index et affiche l'image associée.
+    Prédit le chiffre correspondant à l'image 'index' du dataset Digits.
+
+    - Charge l'image (pour l'affichage) et le label réel
+    - Construit les features (pixels ou HOG)
+    - Charge le modèle entraîné
+    - Prédit + affiche l'image avec (prediction / vrai label)
 
     Paramètres :
-    - index : index de l'image dans le dataset
+    - index : index de l'image dans Digits
     - features_type : "pixels" ou "hog"
     - model_type : "logreg" ou "svm"
-    - model_path : chemin du modèle (si None, nom automatique)
+    - model_path : chemin du modèle (si None -> nom auto)
+    - hog_target_size : ex (32,32) si le modèle a été entraîné sur HOG après resize
+
+    Retour :
+    - (prediction, true_label)
     """
     if model_path is None:
         model_path = f"models/digit_model_{features_type}_{model_type}.joblib"
 
     digits = load_digits()
-    image = digits.images[index]          # (8,8)
+    image = digits.images[index]
     true_label = int(digits.target[index])
 
-    # Préparer l'entrée sous forme attendue par extract_features()
-    # -> shape (n_samples, 8, 8)
+    # On met l'image dans un batch (n=1) pour respecter la forme attendue par extract_features
     X_img = np.array([image], dtype=np.float32)
 
-    # Extraction des features selon features_type
-    X_feat = extract_features(X_img, features_type=features_type)  # (1, n_features)
+    # Features (pixels ou HOG) : doit correspondre à l'entraînement
+    X_feat = extract_features(
+        X_img,
+        features_type=features_type,
+        target_size=hog_target_size
+    )
 
-    # Chargement du modèle et prédiction
     model = load_model(model_path)
     prediction = int(model.predict(X_feat)[0])
 
-    # Affichage
     plt.imshow(image, cmap="gray")
     plt.title(f"Prédiction : {prediction} | Vrai label : {true_label}")
     plt.axis("off")
@@ -50,6 +60,5 @@ def predict_by_index(
 
 
 if __name__ == "__main__":
-    idx = 0
-    pred, true = predict_by_index(idx, features_type="pixels", model_type="logreg")
-    print(f"Index {idx} -> prédiction = {pred}, label réel = {true}")
+    pred, true = predict_by_index(42, features_type="pixels", model_type="logreg")
+    print(f"Index 42 -> prédiction = {pred}, label réel = {true}")

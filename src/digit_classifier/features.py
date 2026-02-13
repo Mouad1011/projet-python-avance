@@ -13,19 +13,24 @@ def extract_hog_features(
     """
     Extrait des caractéristiques HOG à partir d'images (2D).
 
+    Idée :
+    - HOG (Histogram of Oriented Gradients) décrit les contours via les gradients.
+    - C'est souvent plus pertinent que les pixels bruts pour des chiffres manuscrits.
+
     Paramètres :
-    - images : liste/array d'images (ex: digits.images)
-    - target_size : tuple (H, W) si on veut redimensionner (ex: (32, 32)), sinon None
-    - orientations, pixels_per_cell, cells_per_block : paramètres HOG
+    - images : array/list d'images (n_samples, H, W)
+    - target_size : (H, W) pour redimensionner avant HOG (ex : (32, 32)), sinon None
+    - orientations, pixels_per_cell, cells_per_block : hyperparamètres HOG
 
     Retour :
-    - np.array de shape (n_samples, n_features)
+    - np.array (n_samples, n_features) : vecteurs HOG pour chaque image
     """
     feats = []
 
     for img in images:
         img_proc = img
 
+        # Option : redimensionnement pour que HOG ait plus d'information (utile si images trop petites)
         if target_size is not None:
             img_proc = resize(
                 img_proc,
@@ -36,6 +41,7 @@ def extract_hog_features(
                 preserve_range=True
             ).astype(np.float32)
 
+        # Extraction HOG : on récupère un vecteur de features (feature_vector=True)
         f = hog(
             img_proc,
             orientations=orientations,
@@ -47,6 +53,8 @@ def extract_hog_features(
         feats.append(f)
 
     return np.array(feats, dtype=np.float32)
+
+
 def extract_features(
     images,
     features_type="pixels",
@@ -56,21 +64,19 @@ def extract_features(
     cells_per_block=(1, 1),
 ):
     """
-    Transforme des images en vecteurs de caractéristiques.
+    Fonction "wrapper" pour extraire des features selon le choix.
 
-    Paramètres :
-    - images : array (n_samples, H, W)
-    - features_type : "pixels" ou "hog"
-    - target_size : tuple (H, W) si redimensionnement voulu (utile pour HOG)
-    - orientations, pixels_per_cell, cells_per_block : paramètres HOG
+    - pixels : aplatissement (H*W) -> vecteur
+    - hog    : extraction HOG (avec redimensionnement optionnel)
 
-    Retour :
-    - np.array (n_samples, n_features)
+    Objectif : avoir une seule interface pour l'entraînement et la prédiction.
     """
     if features_type == "pixels":
+        # Pixels bruts : on passe de (n, H, W) à (n, H*W)
         return images.reshape(images.shape[0], -1).astype(np.float32)
 
     if features_type == "hog":
+        # HOG : on délègue à la fonction dédiée
         return extract_hog_features(
             images,
             target_size=target_size,
